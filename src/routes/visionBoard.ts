@@ -61,7 +61,7 @@ router.post('/', async (req, res) => {
 
     console.log('Calling GPT for theme extraction...');
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4-0125-preview",
       messages: [
         {
           role: "system",
@@ -118,7 +118,7 @@ router.post('/', async (req, res) => {
       size: size === 'normal' ? "1024x1024" : 
             size === 'phone' ? "1024x1792" :
             "1792x1024", // laptop size
-      quality: "hd",
+      quality: "standard",
       style: "natural"
     });
 
