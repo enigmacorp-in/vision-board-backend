@@ -1,12 +1,21 @@
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables before any other imports
+dotenv.config();
+
+// Debug log to check environment variables
+console.log('Environment variables check:', {
+  OPENAI_API_KEY_EXISTS: !!process.env.OPENAI_API_KEY,
+  MONGODB_URI_EXISTS: !!process.env.MONGODB_URI,
+  PORT_EXISTS: !!process.env.PORT
+});
+
 import express from 'express';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
 import visionBoardRoutes from './routes/visionBoard';
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 

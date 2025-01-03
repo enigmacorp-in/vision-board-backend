@@ -2,11 +2,23 @@ import express from 'express';
 import { VisionBoard } from '../models/VisionBoard';
 import { OpenAI } from 'openai';
 import axios from 'axios';
+import { visionBoardLimiter } from '../middleware/rateLimiter';
 
 const router = express.Router();
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+
+// Initialize OpenAI with error handling
+let openai: OpenAI;
+try {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY is not defined in environment variables');
+  }
+  openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+} catch (error) {
+  console.error('Error initializing OpenAI client:', error);
+  // Continue execution, but the routes using OpenAI will handle the error
+}
 
 // Image size configurations
 const sizeConfigs = {
@@ -28,8 +40,12 @@ const sizeConfigs = {
 };
 
 // Create a new vision board
-router.post('/', async (req, res) => {
+router.post('/', visionBoardLimiter, async (req, res) => {
   try {
+    if (!openai) {
+      throw new Error('OpenAI client not properly initialized');
+    }
+    
     const { size, goals } = req.body;
 
     if (!Array.isArray(goals) || goals.length === 0) {
