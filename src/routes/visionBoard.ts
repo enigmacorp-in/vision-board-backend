@@ -118,7 +118,7 @@ router.post('/', async (req, res) => {
       size: size === 'normal' ? "1024x1024" : 
             size === 'phone' ? "1024x1792" :
             "1792x1024", // laptop size
-      quality: "standard",
+      quality: "hd",
       style: "natural"
     });
 
