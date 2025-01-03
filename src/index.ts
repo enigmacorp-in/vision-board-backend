@@ -10,12 +10,25 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+// CORS configuration with multiple origins
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',').map(origin => origin.trim());
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    console.log('Origin:', origin);
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
-app.use(express.json());
+
+app.use(express.json({ limit: '50mb' }));  // Increased limit for base64 images
 app.use(morgan('dev'));
 
 // Routes
