@@ -30,7 +30,7 @@ export const uploadImageToS3 = async (imageUrl: string, fileName: string): Promi
     // Upload to S3 with public-read ACL
     const params = {
       Bucket: BUCKET_NAME,
-      Key: `vision-boards/${fileName}`,
+      Key: fileName,
       Body: optimizedBuffer,
       ContentType: 'image/png',
       ACL: 'bucket-owner-full-control', // This makes the object publicly accessible
@@ -57,7 +57,7 @@ export const getPresignedUrl = async (key: string, bucket: string): Promise<stri
     let preSignedOption = {
       Bucket: bucket,
       Key: key,
-      Expires: 604800, // 7 days
+      Expires: 15552000, // 6 months
     };
     s3Client.getSignedUrlPromise('getObject', preSignedOption).then(function (url) {
       resolve(url)

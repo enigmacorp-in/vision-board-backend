@@ -48,7 +48,7 @@ router.post('/', visionBoardLimiter, async (req, res) => {
 
     // Async S3 upload
     try {
-      const fileName = `${visionBoard._id}-${Date.now()}.png`;
+      const fileName = `vision-boards/${visionBoard._id}-${Date.now()}.png`;
       const s3ImageUrl = await uploadImageToS3(originalImageUrl, fileName);
 
       // Update document with S3 URL

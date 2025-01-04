@@ -3,8 +3,7 @@ import { TextProcessingService } from './textProcessing/types';
 import { OpenAIImageGenerator } from './imageGeneration/openai';
 import { OpenAITextProcessor } from './textProcessing/openai';
 import { Flux1ImageGenerator } from './imageGeneration/flux1';
-
-type ServiceProvider = 'openai' | 'flux1' | 'google' | 'stability' | 'other';
+import { ServiceProvider } from './types';
 
 export class ServiceFactory {
   private static imageGenerators: Map<ServiceProvider, ImageGenerationService> = new Map();

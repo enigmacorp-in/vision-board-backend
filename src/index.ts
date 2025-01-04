@@ -16,6 +16,8 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import morgan from 'morgan';
 import visionBoardRoutes from './routes/visionBoard';
+import feedbackRoutes from './routes/feedback';
+import imageRoutes from './routes/image';
 
 const app = express();
 
@@ -42,6 +44,8 @@ app.use(morgan('dev'));
 
 // Routes
 app.use('/api/vision-board', visionBoardRoutes);
+app.use('/api/feedback', feedbackRoutes);
+app.use('/api/image', imageRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

@@ -1,0 +1,1 @@
+export type ServiceProvider = 'openai' | 'flux1' | 'google' | 'stability' | 'other';
