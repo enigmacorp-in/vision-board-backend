@@ -2,8 +2,9 @@ import { ImageGenerationService } from './imageGeneration/types';
 import { TextProcessingService } from './textProcessing/types';
 import { OpenAIImageGenerator } from './imageGeneration/openai';
 import { OpenAITextProcessor } from './textProcessing/openai';
+import { Flux1ImageGenerator } from './imageGeneration/flux1';
 
-type ServiceProvider = 'openai' | 'google' | 'stability' | 'other';
+type ServiceProvider = 'openai' | 'flux1' | 'google' | 'stability' | 'other';
 
 export class ServiceFactory {
   private static imageGenerators: Map<ServiceProvider, ImageGenerationService> = new Map();
@@ -14,6 +15,9 @@ export class ServiceFactory {
       switch (provider) {
         case 'openai':
           this.imageGenerators.set(provider, new OpenAIImageGenerator());
+          break;
+        case 'flux1':
+          this.imageGenerators.set(provider, new Flux1ImageGenerator());
           break;
         // Add other providers here
         default:
