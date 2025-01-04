@@ -3,10 +3,13 @@ import { VisionBoard } from '../models/VisionBoard';
 import { visionBoardLimiter } from '../middleware/rateLimiter';
 import { uploadImageToS3 } from '../utils/s3';
 import { ServiceFactory } from '../services/factory';
-const TextProcessorAi = process.env.TEXT_PROCESSOR_AI || 'openai' as any;
-const ImageGeneratorAi = process.env.IMAGE_GENERATOR_AI || 'openai' as any;
+import { ServiceProvider } from '../services/types';
 
 const router = express.Router();
+
+// Get service providers from environment variables with fallbacks
+const VisionBoardTextProcessor = (process.env.VISION_BOARD_TEXT_PROCESSOR || 'openai') as ServiceProvider;
+const VisionBoardImageGenerator = (process.env.VISION_BOARD_IMAGE_GENERATOR || 'openai') as ServiceProvider;
 
 // Create a new vision board
 router.post('/', visionBoardLimiter, async (req, res) => {
@@ -19,37 +22,37 @@ router.post('/', visionBoardLimiter, async (req, res) => {
 
     console.log('Processing goals:', goals);
 
-    // Get services from factory
-    const textProcessor = ServiceFactory.getTextProcessor(TextProcessorAi);
-    const imageGenerator = ServiceFactory.getImageGenerator(ImageGeneratorAi);
+    // Get services from factory with specific providers
+    const textProcessor = ServiceFactory.getTextProcessor(VisionBoardTextProcessor);
+    const imageGenerator = ServiceFactory.getImageGenerator(VisionBoardImageGenerator);
 
     // Process goals to get visual elements and prompt
     const { prompt, visualElements } = await textProcessor.processGoals({ goals });
 
     // Generate image
-    const { url: originalImageUrl } = await imageGenerator.generateImage({
+    const { url: tempImageUrl } = await imageGenerator.generateImage({
       prompt,
       size,
       quality: 'hd',
       style: 'natural'
     });
 
-    // Create vision board document with original OpenAI URL
+    // Create vision board document with temporary URL
     const visionBoard = new VisionBoard({
       size,
       goals,
-      imageUrl: originalImageUrl,
+      imageUrl: tempImageUrl,
     });
 
     await visionBoard.save();
 
-    // Send immediate response with OpenAI URL
+    // Send immediate response with temporary URL
     res.status(201).json(visionBoard);
 
     // Async S3 upload
     try {
-      const fileName = `vision-boards/${visionBoard._id}-${Date.now()}.png`;
-      const s3ImageUrl = await uploadImageToS3(originalImageUrl, fileName);
+      const s3Key = `vision-boards/${visionBoard._id}-${Date.now()}.png`;
+      const s3ImageUrl = await uploadImageToS3(tempImageUrl, s3Key);
 
       // Update document with S3 URL
       await VisionBoard.findByIdAndUpdate(visionBoard._id, {

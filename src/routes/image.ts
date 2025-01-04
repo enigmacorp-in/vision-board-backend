@@ -6,7 +6,9 @@ import GeneratedImage from '../models/GeneratedImage';
 import { uploadImageToS3, getPresignedUrl } from '../utils/s3';
 
 const router = express.Router();
-const ImageGeneratorAi = (process.env.IMAGE_GENERATOR_AI || 'openai') as ServiceProvider;
+
+// Get service provider from environment variable with fallback
+const TextToImageGenerator = (process.env.TEXT_TO_IMAGE_GENERATOR || 'openai') as ServiceProvider;
 
 // Generate image from text
 router.post('/', rateLimiter, async (req, res) => {
@@ -17,8 +19,8 @@ router.post('/', rateLimiter, async (req, res) => {
       return res.status(400).json({ message: 'Prompt is required' });
     }
 
-    // Get image generator service from factory
-    const imageGenerator = ServiceFactory.getImageGenerator(ImageGeneratorAi);
+    // Get image generator service from factory with specific provider
+    const imageGenerator = ServiceFactory.getImageGenerator(TextToImageGenerator);
 
     const size = 'normal'; // Fixed size
 
