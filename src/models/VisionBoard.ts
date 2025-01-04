@@ -14,6 +14,10 @@ const visionBoardSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  base64Image: {
+    type: String,
+    required: false
+  },
   isS3Uploaded: {
     type: Boolean,
     default: false,
