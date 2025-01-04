@@ -14,18 +14,12 @@ const visionBoardSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  originalImageUrl: {
-    type: String,
-    required: true
+  isS3Uploaded: {
+    type: Boolean,
+    default: false,
   },
-  base64Image: {
-    type: String,
-    required: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+}, {
+  timestamps: true,
 });
 
 export const VisionBoard = mongoose.model('VisionBoard', visionBoardSchema); 

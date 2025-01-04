@@ -3,6 +3,7 @@ import { VisionBoard } from '../models/VisionBoard';
 import { OpenAI } from 'openai';
 import axios from 'axios';
 import { visionBoardLimiter } from '../middleware/rateLimiter';
+import { uploadImageToS3 } from '../utils/s3';
 
 const router = express.Router();
 
@@ -133,49 +134,48 @@ router.post('/', visionBoardLimiter, async (req, res) => {
       n: 1,
       size: size === 'normal' ? "1024x1024" : 
             size === 'phone' ? "1024x1792" :
-            "1792x1024", // laptop size
+            "1792x1024",
       quality: "hd",
       style: "natural"
     });
 
     if (!response.data || response.data.length === 0) {
-      throw new Error('Failed to generate image: No image data returned from DALL-E');
+      throw new Error('Failed to generate image');
     }
 
-    console.log('DALL-E response received');
     const originalImageUrl = response.data[0].url;
-
     if (!originalImageUrl) {
-      throw new Error('Failed to generate image: No image URL in response');
+      throw new Error('No image URL in response');
     }
 
-    // Fetch the image data from OpenAI
-    const imageResponse = await axios.get(originalImageUrl, { responseType: 'arraybuffer' });
-    const imageBuffer = Buffer.from(imageResponse.data);
-    const base64Image = imageBuffer.toString('base64');
-    const base64Url = `data:image/png;base64,${base64Image}`;
-
-    console.log('Creating vision board document...');
+    // Create vision board document with original OpenAI URL
     const visionBoard = new VisionBoard({
       size,
       goals,
-      imageUrl: base64Url,
-      originalImageUrl,
-      base64Image: base64Image
+      imageUrl: originalImageUrl,
     });
 
     await visionBoard.save();
-    console.log('Vision board saved successfully');
+
+    // Send immediate response with OpenAI URL
     res.status(201).json(visionBoard);
+
+    // Async S3 upload
+    try {
+      const fileName = `${visionBoard._id}-${Date.now()}.png`;
+      const s3ImageUrl = await uploadImageToS3(originalImageUrl, fileName);
+
+      // Update document with S3 URL
+      await VisionBoard.findByIdAndUpdate(visionBoard._id, {
+        imageUrl: s3ImageUrl,
+        isS3Uploaded: true,
+      });
+    } catch (uploadError) {
+      console.error('Error in async S3 upload:', uploadError);
+      // Don't throw error as response is already sent
+    }
   } catch (error: any) {
-    console.error('Error creating vision board:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      response: error.response?.data
-    });
-    
-    // Send more detailed error message to client
+    console.error('Error creating vision board:', error);
     const errorMessage = error.response?.data?.error?.message || error.message || 'Error creating vision board';
     res.status(500).json({ message: errorMessage });
   }
